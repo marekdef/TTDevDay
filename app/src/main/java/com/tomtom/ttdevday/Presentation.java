@@ -5,19 +5,18 @@
  * /
  */
 
-package devday.tomtom.com.ttdevday;/*
+package com.tomtom.ttdevday;/*
 * Copyright (C) TomTom International B.V., 2015
 * All rights reserved.
 */
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 public class Presentation {
-    String id;
-    String author;
-    String title;
-    String description;
+    public String id;
+    public String author;
+    public String title;
+    public String description;
     @SerializedName("noVotes")
-    int number;
+    public int number;
 }

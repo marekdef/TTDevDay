@@ -26,5 +26,5 @@
         android:id="@+id/recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="devday.tomtom.com.ttdevday.MainActivity"/>
+        tools:context="com.tomtom.ttdevday.MainActivity"/>
 </LinearLayout>

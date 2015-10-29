@@ -5,50 +5,38 @@
  * /
  */
 
-package devday.tomtom.com.ttdevday;
+package com.tomtom.ttdevday;
 
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewPropertyAnimator;
-import android.view.animation.AnticipateInterpolator;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import retrofit.GsonConverterFactory;
-import retrofit.Retrofit;
-import retrofit.RxJavaCallAdapterFactory;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
+    PresentationsIntentService mPresentationService;
+
     private RecyclerView recyclerView;
     private MyAdapter adapter;
-    private Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(Deployd.API)
-            .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-            .build();
-
-    private final Deployd deployd = retrofit.create(Deployd.class);
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,13 +51,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-
-        deployd.presentations().observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(new Action1<List<Presentation>>() {
-            @Override
-            public void call(List<Presentation> presentations) {
-                adapter.setList(presentations);
-            }
-        });
+        bindService(new Intent(this, PresentationsIntentService.class), mConnection, Context.BIND_AUTO_CREATE);
     }
 
     private static class MyViewHolder extends RecyclerView.ViewHolder {
@@ -95,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private static class MyAdapter extends RecyclerView.Adapter<MyViewHolder> {
+    private class MyAdapter extends RecyclerView.Adapter<MyViewHolder> {
         private List<Presentation> presentations = new ArrayList<>();
 
         @Override
@@ -107,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final MyViewHolder holder, final int position) {
-            Presentation presentation = this.presentations.get(position);
+            final Presentation presentation = this.presentations.get(position);
             holder.textAuthor.setText(presentation.author);
             holder.textTitle.setText(presentation.title);
             holder.textDescription.setText(presentation.description);
@@ -116,14 +98,17 @@ public class MainActivity extends AppCompatActivity {
             holder.relativeLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ObjectAnimator animator = ViewPropertyObjectAnimator
-                            .animate(holder.parentView)
-                            .height(600)
-                            .setDuration(300)
-                            .setInterpolator(new AnticipateInterpolator())
-                            .get();
-
-                    animator.start();
+                    mService.handleActionBaz(presentation.id).observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Vote>() {
+                        @Override
+                        public void call(final Vote vote) {
+                            Toast.makeText(MainActivity.this, String.valueOf(vote.noVotes), Toast.LENGTH_SHORT);
+                        }
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(final Throwable throwable) {
+                            Log.e("TAG", "", throwable);
+                        }
+                    });
                 }
             });
         }
@@ -138,4 +123,27 @@ public class MainActivity extends AppCompatActivity {
             notifyDataSetChanged();
         }
     }
+
+    private PresentationsIntentService mService;
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            PresentationsIntentService.LocalBinder binder = (PresentationsIntentService.LocalBinder) service;
+            mService = binder.getService();
+            mService.handleActionFetchPresentations().observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<List<Presentation>>() {
+                @Override
+                public void call(final List<Presentation> presentations) {
+                    adapter.setList(presentations);
+                }
+            });
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+        }
+    };
 }
