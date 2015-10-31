@@ -12,11 +12,20 @@ package com.tomtom.ttdevday;/*
 
 import com.google.gson.annotations.SerializedName;
 
+import ckm.simple.sql_provider.annotation.SimpleSQLColumn;
+import ckm.simple.sql_provider.annotation.SimpleSQLTable;
+
+@SimpleSQLTable(table = "presentations", provider = "PresentationsProvider")
 public class Presentation {
+    @SimpleSQLColumn("id")
     public String id;
+    @SimpleSQLColumn("author")
     public String author;
+    @SimpleSQLColumn("title")
     public String title;
+    @SimpleSQLColumn("description")
     public String description;
     @SerializedName("noVotes")
+    @SimpleSQLColumn("noVotes")
     public int number;
 }

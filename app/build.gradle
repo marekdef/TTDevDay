@@ -46,8 +46,12 @@ dependencies {
 
     compile 'com.bartoszlipinski:viewpropertyobjectanimator:1.1.0'
 
-    compile 'com.pushtorefresh.storio:sqlite:1.6.0'
+//    compile 'com.pushtorefresh.storio:sqlite:1.6.0'
 
 // If you need StorIO for ContentResolver
     compile 'com.pushtorefresh.storio:content-resolver:1.6.0'
+
+    compile 'com.squareup:javapoet:1.2.0'
+    compile 'ckm.simple:simple_sql_provider_annotation:1.0.6'
+    compile 'ckm.simple:simple_sql_provider_processor:1.0.6'
 }
