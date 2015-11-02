@@ -122,7 +122,7 @@ public class PresentationsIntentService extends Service {
      * Handle action Baz in the provided background thread with the provided
      * parameters.
      */
-    public Observable<Vote> handleActionVote(String presentationId, String votedBy) {
+    public Observable<Vote> handleActionVoteForPresentation(String presentationId, String votedBy) {
         final Vote vote = new Vote();
         vote.deviceId = "10";
         vote.presentationId = presentationId;

@@ -18,7 +18,7 @@ public class PresentationGetResolver extends DefaultGetResolver<Presentation> {
         presentation.id = cursor.getString(cursor.getColumnIndex(PresentationsTable.FIELD_ID));
         presentation.author = cursor.getString(cursor.getColumnIndex(PresentationsTable.FIELD_AUTHOR));
         presentation.description = cursor.getString(cursor.getColumnIndex(PresentationsTable.FIELD_DESCRIPTION));
-        presentation.number = cursor.getInt(cursor.getColumnIndex(PresentationsTable.FIELD_NOVOTES));
+        presentation.number = cursor.getInt(cursor.getColumnIndex(PresentationsTable.FIELD_VOTES_NUMBER));
         presentation.title = cursor.getString(cursor.getColumnIndex(PresentationsTable.FIELD_TITLE));
         return presentation;
     }

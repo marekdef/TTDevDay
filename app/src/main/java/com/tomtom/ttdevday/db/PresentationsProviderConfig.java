@@ -8,7 +8,7 @@ import ckm.simple.sql_provider.annotation.SimpleSQLConfig;
        name = "PresentationsProvider",
        authority = "com.tomtom.ttdevday.presentations.provider",
        database = "presentations.db",
-       version = 1)
+       version = 2)
 
 public class PresentationsProviderConfig implements ProviderConfig {
 

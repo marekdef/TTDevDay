@@ -26,6 +26,6 @@ public class Presentation {
     @SimpleSQLColumn("description")
     public String description;
     @SerializedName("noVotes")
-    @SimpleSQLColumn("noVotes")
+    @SimpleSQLColumn("votes_number")
     public int number;
 }
