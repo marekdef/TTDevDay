@@ -2,19 +2,21 @@ package com.tomtom.ttdevday;
 
 import android.app.IntentService;
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.pushtorefresh.storio.sqlite.SQLiteTypeMapping;
-import com.pushtorefresh.storio.sqlite.impl.DefaultStorIOSQLite;
-import com.pushtorefresh.storio.sqlite.queries.Query;
+import com.pushtorefresh.storio.contentresolver.ContentResolverTypeMapping;
+import com.pushtorefresh.storio.contentresolver.impl.DefaultStorIOContentResolver;
+import com.pushtorefresh.storio.contentresolver.queries.Query;
 import com.tomtom.ttdevday.resolvers.PresenationPutResolver;
 import com.tomtom.ttdevday.resolvers.PresentationGetResolver;
 import com.tomtom.ttdevday.resolvers.PresentationsDeleteResolver;
 
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit.GsonConverterFactory;
@@ -33,6 +35,7 @@ import rx.schedulers.Schedulers;
  */
 public class PresentationsIntentService extends Service {
     private final IBinder mBinder = new LocalBinder();
+    private DefaultStorIOContentResolver storIOSQLite;
 
     public class LocalBinder extends Binder {
         PresentationsIntentService getService() {
@@ -43,7 +46,6 @@ public class PresentationsIntentService extends Service {
 
 
 
-    private final DefaultStorIOSQLite storIOSQLite;
     private Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(Deployd.API)
             .addConverterFactory(GsonConverterFactory.create())
@@ -87,16 +89,18 @@ public class PresentationsIntentService extends Service {
 
     public PresentationsIntentService() {
         super();
-
-        storIOSQLite = DefaultStorIOSQLite.builder()
-                .sqliteOpenHelper(new TTDevDaySQLite(this))
-                .addTypeMapping(Presentation.class, SQLiteTypeMapping.<Presentation>builder().putResolver(new PresenationPutResolver()).getResolver(new PresentationGetResolver()).deleteResolver(new PresentationsDeleteResolver()).build()) // required for object mapping
-                .build();
     }
 
     @Nullable
     @Override
     public IBinder onBind(final Intent intent) {
+
+        ContentResolver contentResolver = getContentResolver();
+        storIOSQLite = DefaultStorIOContentResolver.builder()
+                .contentResolver(getContentResolver())
+                .addTypeMapping(Presentation.class, ContentResolverTypeMapping.<Presentation>builder().putResolver(new PresenationPutResolver()).getResolver(new PresentationGetResolver()).deleteResolver(new PresentationsDeleteResolver()).build()) // required for object mapping
+                .build();
+
         return mBinder;
     }
 
@@ -126,8 +130,15 @@ public class PresentationsIntentService extends Service {
         return deployd.vote(vote).subscribeOn(Schedulers.io()).map(new Func1<Vote, Vote>() {
             @Override
             public Vote call(final Vote vote) {
-                final Query query = Query.builder().table(TTDevDaySQLite.TABLE_PRESENTATIONS).where(TTDevDaySQLite.ID + " = ?" ).whereArgs(vote.presentationId).build();
-                storIOSQLite.get().cursor().withQuery(query).prepare().executeAsBlocking();
+                Query query = Query.builder().uri(PresentationsTable.CONTENT_URI).where(PresentationsTable.FIELD_ID + "=?").whereArgs(vote.presentationId).build();
+                Presentation first = storIOSQLite.get().listOfObjects(Presentation.class).withQuery(query).prepare().createObservable().single().flatMap(new Func1<List<Presentation>, Observable<Presentation>>() {
+                    @Override
+                    public Observable<Presentation> call(final List<Presentation> presentations) {
+                        return Observable.just(presentations.get(0));
+                    }
+                }).toBlocking().first();
+                first.number = vote.noVotes;
+                storIOSQLite.put().objects(Arrays.asList(first)).prepare().executeAsBlocking();
                 return vote;
             }
         });

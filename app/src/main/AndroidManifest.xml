@@ -28,6 +28,9 @@
             android:name=".PresentationsIntentService"
             android:exported="false" >
         </service>
+        <provider
+            android:authorities="com.tomtom.ttdevday.presentations.provider"
+            android:name=".db.PresentationsProvider"/>
     </application>
 
 </manifest>
