@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             holder.relativeLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mService.handleActionBaz(presentation.id).observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Vote>() {
+                    mService.handleActionVoteForPresentation(presentation.id).observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Vote>() {
                         @Override
                         public void call(final Vote vote) {
                             Toast.makeText(MainActivity.this, String.valueOf(vote.noVotes), Toast.LENGTH_SHORT);
